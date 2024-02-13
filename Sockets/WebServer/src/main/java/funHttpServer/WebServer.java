@@ -199,11 +199,31 @@ class WebServer {
 
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
           // extract path parameters
-          query_pairs = splitQuery(request.replace("multiply?", ""));
+          try {
+            query_pairs = splitQuery(request.replace("multiply?", ""));
+          } catch (Exception e) {
+            System.out.println("Parameters were not entered.");
+          }
 
           // extract required fields from parameters
-          Integer num1 = Integer.parseInt(query_pairs.get("num1"));
-          Integer num2 = Integer.parseInt(query_pairs.get("num2"));
+          Integer num1;
+          try {
+            num1 = Integer.parseInt(query_pairs.get("num1"));
+          } catch (NumberFormatException e) {
+            num1 = 0;
+          } catch (Exception e) {
+            num1 = 1;
+          }
+
+          Integer num2;
+          try {
+            num2 = Integer.parseInt(query_pairs.get("num2"));
+          } catch (NumberFormatException e) {
+            num2 = 0;
+          } catch (Exception e) {
+            num2 = 1;
+          }
+
 
           // do math
           Integer result = num1 * num2;
@@ -213,9 +233,6 @@ class WebServer {
           builder.append("Content-Type: text/html; charset=utf-8\n");
           builder.append("\n");
           builder.append("Result is: " + result);
-
-          // TODO: Include error handling here with a correct error code and
-          // a response that makes sense
 
         } else if (request.contains("github?")) {
           // pulls the query from the request and runs it with GitHub's REST API
@@ -234,9 +251,72 @@ class WebServer {
           builder.append("HTTP/1.1 200 OK\n");
           builder.append("Content-Type: text/html; charset=utf-8\n");
           builder.append("\n");
-          builder.append("Check the todos mentioned in the Java source file");
-          // TODO: Parse the JSON returned by your fetch and create an appropriate
           // response based on what the assignment document asks for
+          builder.append(json);
+
+        } else if (request.contains("isPrime?")) {
+          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+          int primeNum;
+          try {
+            query_pairs = splitQuery(request.replace("isPrime?", ""));
+            primeNum = Integer.parseInt(query_pairs.get("num"));
+          } catch (Exception e) {
+            primeNum = 1;
+          }
+
+          boolean isPrime = false;
+          int repNum = primeNum; //representative number
+          int sum = 0;
+          if (repNum % 10 == 0) {
+            isPrime = false;
+          } else if(primeNum > 40) {
+
+            while(primeNum != 0) {
+              sum += primeNum % 10;
+              primeNum /= 10;
+            }
+
+            if(sum % 3 == 0) {
+              isPrime = true;
+            }
+          } else if (primeNum == 3 || primeNum == 2){
+            isPrime = true;
+          } else {
+            int method1 = primeNum + 1;
+            int method2 = primeNum - 1;
+
+            if (method1 % 6 == 0 || method2 % 6 == 0) {
+              isPrime = true;
+            }
+          }
+
+          builder.append("HTTP/1.1 200 OK\n");
+          builder.append("Content-Type: text/html; charset=utf-8\n");
+          builder.append("\n");
+
+          if(!isPrime) {
+            builder.append(repNum + " is not a prime number.\n");
+          } else {
+            builder.append(repNum + " is a prime number.\n");
+          }
+
+        } else if (request.contains("randomNum?")) {
+          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+          int bound = 100;
+          try {
+            query_pairs = splitQuery(request.replace("isPrime?", ""));
+            bound = Integer.parseInt(query_pairs.get("bound"));
+          } catch (Exception e) {
+            bound = 100;
+          }
+
+
+          int number = (int)((Math.random() * (String.valueOf(bound).length() * 10)) % bound);
+
+          builder.append("HTTP/1.1 200 OK\n");
+          builder.append("Content-Type: text/html; charset=utf-8\n");
+          builder.append("\n");
+          builder.append("Your number is " + number + "\n");
 
         } else {
           // if the request is not recognized at all

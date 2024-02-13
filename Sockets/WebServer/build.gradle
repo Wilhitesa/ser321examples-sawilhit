@@ -24,4 +24,3 @@ task FunWebServer(type: JavaExec) {
   standardInput = System.in
 }
 
-
